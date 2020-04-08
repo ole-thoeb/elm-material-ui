@@ -16,6 +16,8 @@ module MaterialUI.Theme exposing
     , shapeToAttributes
     , toElementColor
     , transparent
+    , getFont
+    , Fontscale(..)
     )
 
 import Color
@@ -361,6 +363,65 @@ applyCase fontcase text =
 
         AllCaps ->
             String.toUpper text
+
+
+type Fontscale
+    = H1
+    | H2
+    | H3
+    | H4
+    | H5
+    | H6
+    | Subtitle1
+    | Subtitle2
+    | Body1
+    | Body2
+    | Button
+    | Caption
+    | Overline
+
+
+getFont : Fontscale -> Theme a -> Font
+getFont fontScale { typescale } =
+    case fontScale of
+        H1 ->
+            typescale.h1
+
+        H2 ->
+            typescale.h2
+
+        H3 ->
+            typescale.h3
+
+        H4 ->
+            typescale.h4
+
+        H5 ->
+            typescale.h5
+
+        H6 ->
+            typescale.h6
+
+        Subtitle1 ->
+            typescale.subtitle1
+
+        Subtitle2 ->
+            typescale.subtitle2
+
+        Body1 ->
+            typescale.body1
+
+        Body2 ->
+            typescale.body2
+
+        Button ->
+            typescale.button
+
+        Caption ->
+            typescale.caption
+
+        Overline ->
+            typescale.overline
 
 
 type alias Typescale =
