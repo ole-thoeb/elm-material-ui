@@ -37,7 +37,7 @@ viewTextButton :
     -> Bool
     -> Element String
 viewTextButton theme color text icon onPress disabled =
-    Button.text
+    Button.text []
         { color = color
         , text = text
         , icon = icon
@@ -56,7 +56,7 @@ viewOutlinedButton :
     -> Bool
     -> Element String
 viewOutlinedButton theme color text icon onPress disabled =
-    Button.outlined
+    Button.outlined []
         { color = color
         , text = text
         , icon = icon
@@ -75,7 +75,7 @@ viewContainedButton :
     -> Bool
     -> Element String
 viewContainedButton theme color text icon onPress disabled =
-    Button.contained
+    Button.contained []
         { color = color
         , text = text
         , icon = icon

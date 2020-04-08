@@ -24,8 +24,8 @@ type alias Button a msg =
     }
 
 
-text : Button a msg -> Theme.Theme a -> Element msg
-text btn theme =
+text : List (Element.Attribute msg) -> Button a msg -> Theme.Theme a -> Element msg
+text attr btn theme =
     Input.button
         (Theme.fontToAttributes theme.typescale.button
             ++ [ Element.height <| Element.px 36
@@ -34,6 +34,7 @@ text btn theme =
                , Element.focused
                     [ Border.glow theme.color.surface 0 ]
                ]
+            ++ attr
             ++ (if btn.disabled then
                     [ Font.color <| Theme.setAlpha 0.5 theme.color.onSurface
                     , Internal.disabled True
@@ -70,8 +71,8 @@ text btn theme =
         }
 
 
-outlined : Button a msg -> Theme.Theme a -> Element msg
-outlined btn theme =
+outlined : List (Element.Attribute msg) ->  Button a msg -> Theme.Theme a -> Element msg
+outlined attr btn theme =
     Input.button
         (Theme.fontToAttributes theme.typescale.button
             ++ Theme.shapeToAttributes 36 36 theme.shape.button
@@ -82,6 +83,7 @@ outlined btn theme =
                , Element.focused
                     [ Border.glow theme.color.surface 0 ]
                ]
+            ++ attr
             ++ (if btn.disabled then
                     [ Border.color <| Theme.setAlpha 0.5 theme.color.onSurface
                     , Font.color <| Theme.setAlpha 0.5 theme.color.onSurface
@@ -121,8 +123,8 @@ outlined btn theme =
         }
 
 
-contained : Button a msg -> Theme.Theme a -> Element msg
-contained btn theme =
+contained : List (Element.Attribute msg) -> Button a msg -> Theme.Theme a -> Element msg
+contained attr btn theme =
     Input.button
         (Theme.fontToAttributes theme.typescale.button
             ++ Theme.shapeToAttributes 36 36 theme.shape.button
@@ -133,6 +135,7 @@ contained btn theme =
                     [ Border.glow theme.color.surface 0
                     ]
                ]
+            ++ attr
             ++ (if btn.disabled then
                     [ Font.color <| Theme.setAlpha 0.5 theme.color.onSurface
                     , Background.color <| Theme.setAlpha 0.2 theme.color.onSurface

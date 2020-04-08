@@ -36,14 +36,14 @@ btnlistStory : Story (List (Theme a -> Element String))
 btnlistStory =
     Story "Buttons"
         [ ( "Two"
-          , [ Button.contained
+          , [ Button.contained []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Main action"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Secondary action"
@@ -53,7 +53,7 @@ btnlistStory =
             ]
           )
         , ( "One"
-          , [ Button.contained
+          , [ Button.contained []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Main action"
@@ -63,21 +63,21 @@ btnlistStory =
             ]
           )
         , ( "Three"
-          , [ Button.outlined
+          , [ Button.outlined []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Main"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Second"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Third"
@@ -87,28 +87,28 @@ btnlistStory =
             ]
           )
         , ( "Four"
-          , [ Button.contained
+          , [ Button.contained []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Main action"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Second"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Third"
                 , onPress = Nothing
                 , disabled = False
                 }
-            , Button.text
+            , Button.text []
                 { icon = Nothing
                 , color = Theme.Primary
                 , text = "Fourth"
