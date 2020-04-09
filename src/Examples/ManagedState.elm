@@ -8,13 +8,15 @@ import Element.Font as Font
 import Html exposing (Html)
 import MaterialUI.Internal.TextField.Model as TextField
 import MaterialUI.MaterilaUI as MaterialUI
-import MaterialUI.TextFieldM as TestField
+import MaterialUI.TextFieldM as TextField
 import MaterialUI.Theme as Theme
+import MaterialUI.Themes.Dark as Dark
 
 
 type alias Model =
     { mui : MaterialUI.Model () Msg
-    , text : String
+    , text1 : String
+    , text2 : String
     }
 
 
@@ -25,8 +27,9 @@ type Msg
 
 init : Model
 init =
-    { mui = MaterialUI.defaultModel Mui Theme.defaultTheme
-    , text = ""
+    { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme-} Dark.theme
+    , text1 = ""
+    , text2 = ""
     }
 
 
@@ -34,7 +37,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Text text ->
-            { model | text = text }
+            { model | text1 = text }
 
         Mui mui ->
             { model | mui = MaterialUI.update mui model.mui }
@@ -55,7 +58,7 @@ view model =
             , Element.padding 10
             , Element.centerX
             ]
-            [ TestField.managed model.mui
+            [ TextField.managed model.mui
                 [ Element.width Element.fill
                 ]
                 { index = "tf1"
@@ -63,7 +66,20 @@ view model =
                 , hideLabel = False
                 , type_ = TextField.Outlined
                 , color = Theme.Primary
-                , text = model.text
+                , text = model.text1
+                , onChange = Text
+                , errorText = Nothing
+                , helperText = Nothing
+                }
+            , TextField.managed model.mui
+                [ Element.width Element.fill
+                ]
+                { index = "tf2"
+                , label = "TextField"
+                , hideLabel = False
+                , type_ = TextField.Filled
+                , color = Theme.Primary
+                , text = model.text2
                 , onChange = Text
                 , errorText = Nothing
                 , helperText = Nothing

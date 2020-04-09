@@ -11,7 +11,7 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
-import Html.Attributes
+import Html.Attributes as Attributes
 import MaterialUI.Internal as Internal
 import MaterialUI.Internal.Component exposing (Index, Indexed)
 import MaterialUI.Internal.Message as Message
@@ -120,7 +120,7 @@ text attrs field theme =
                     (labelPosition
                         ++ labelColor
                         ++ labelFont
-                        ++ [ Element.htmlAttribute (Html.Attributes.style "transition" "all 0.15s")
+                        ++ [ Element.htmlAttribute (Attributes.style "transition" "all 0.15s")
                            , Element.width Element.shrink
                            , Element.paddingXY 4 0
                            ]
@@ -148,68 +148,38 @@ text attrs field theme =
                     [ Border.color <| Theme.setAlpha 0.3 theme.color.onSurface
                     ]
 
+        borderWidth = if field.state == TextField.Focused then 2 else 1
         borders =
-            case field.type_ of
-                TextField.Outlined ->
-                    Theme.shapeToAttributes 56 56 theme.shape.textField.outlined
-                        ++ [ Border.width 1
-                           , Element.focused
-                                [ Border.glow theme.color.onSurface 0
-                                ]
-                           , Element.behindContent <|
-                                Element.el
-                                    (Theme.shapeToAttributes 56 56 theme.shape.textField.outlined
-                                        ++ [ Border.width
-                                                (if field.state == TextField.Focused then
-                                                    2
+            [ Element.focused -- remove default glow
+                [ Border.glow theme.color.background 0
+                ]
+            ]
+            ++ (case field.type_ of
+                    TextField.Outlined ->
+                        Border.width borderWidth ::
+                            Theme.shapeToAttributes 56 56 theme.shape.textField.outlined
 
-                                                 else
-                                                    1
-                                                )
-                                           , Element.width Element.fill
-                                           , Element.height Element.fill
-                                           , Element.htmlAttribute
-                                                (Html.Attributes.style "transition" "border 0.15s")
-                                           , Background.color <| Theme.setAlpha 0.0 theme.color.onSurface
-                                           ]
-                                        ++ borderColor
-                                    )
-                                    Element.none
-                           ]
-                        ++ borderColor
-
-                TextField.Filled ->
-                    Theme.shapeToAttributes 56 56 theme.shape.textField.filled
-                        ++ [ Border.widthEach
-                                { bottom =
-                                    if field.state == TextField.Focused then
-                                        2
-
-                                    else
-                                        1
+                    TextField.Filled ->
+                         Theme.shapeToAttributes 56 56 theme.shape.textField.filled ++
+                             [ Border.widthEach
+                                { bottom = borderWidth
                                 , top = 0
                                 , left = 0
                                 , right = 0
                                 }
-                           , Border.color <| Theme.setAlpha 0.4 theme.color.onSurface
-                           , Element.focused
-                                [ Border.glow theme.color.onSurface 0
-                                , Border.color <| Theme.getColor field.color theme
-                                ]
-                           , case field.state of
-                                TextField.Idle ->
-                                    Element.mouseOver
-                                        [ Border.color <| Theme.setAlpha 0.8 theme.color.onSurface
-                                        ]
+                            ]
+            )
+            ++ (case field.state of
+                    TextField.Idle ->
+                        [ Element.mouseOver
+                            [ Border.color <| Theme.setAlpha 0.8 theme.color.onSurface
+                            ]
+                        ]
 
-                                TextField.Focused ->
-                                    Border.color <| Theme.getColor field.color theme
-
-                                TextField.Disabled ->
-                                    Element.mouseOver
-                                        []
-                           ]
-                        ++ borderColor
+                    _ ->
+                        []
+            )
+            ++ borderColor
 
         padding =
             case field.type_ of
@@ -277,11 +247,11 @@ text attrs field theme =
                 ++ [ Element.height <| Element.px 56
                    , Element.inFront label
                    , Element.htmlAttribute
-                        (Html.Attributes.style
+                        (Attributes.style
                             "transition"
                             "border 0.15s, background 0.15s, padding 0.15s"
                         )
-                   , Element.htmlAttribute (Html.Attributes.style "flex" "1")
+                   , Element.htmlAttribute (Attributes.style "flex" "1")
                    , Font.color
                         (if field.state == TextField.Disabled then
                             Theme.setAlpha 0.7 theme.color.onSurface
