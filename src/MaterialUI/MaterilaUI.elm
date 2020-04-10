@@ -1,6 +1,7 @@
 module MaterialUI.MaterilaUI exposing (Model, defaultModel, update, Msg)
 
 
+import MaterialUI.Internal.Icon.Implementation as Icon
 import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as Model
 import MaterialUI.Internal.TextField.Implementation as Textfield
@@ -23,3 +24,6 @@ update msg model =
     case msg of
         Message.TextFieldMsg index subMsg ->
             Textfield.update subMsg index model
+
+        Message.IconMsg index subMsg ->
+            Icon.update subMsg index model

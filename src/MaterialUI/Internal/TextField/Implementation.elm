@@ -13,7 +13,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Html.Attributes as Attributes
 import MaterialUI.Internal as Internal
-import MaterialUI.Internal.Component exposing (Index, Indexed)
+import MaterialUI.Internal.Component as Component exposing (Index, Indexed)
 import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as MaterialUI
 import MaterialUI.Internal.TextField.Model as TextField exposing (TextField)
@@ -292,27 +292,14 @@ text attrs field theme =
 type alias Store s = { s | textfield : Indexed TextField.Model }
 
 
-getSet :
-    { get : Index -> Store s -> TextField.Model
-    , set :
-        Index
-        -> TextField.Model
-        -> Store s
-        -> Store s
-    }
+getSet : Component.GetSet (Store s) TextField.Model
 getSet =
-    { get = \index store -> Dict.get index store.textfield |> Maybe.withDefault TextField.defaultModel
-    , set = \index model store -> { store | textfield = Dict.insert index model store.textfield }
-    }
+    Component.getSet .textfield (\model store -> { store | textfield = model }) TextField.defaultModel
 
 
 update : TextField.Msg -> Index -> Store s -> Store s
-update msg index store =
-    let
-        model = getSet.get index store
-        updatedModel = update_ msg model
-    in
-    getSet.set index updatedModel store
+update =
+    Component.update getSet update_
 
 
 update_ : TextField.Msg -> TextField.Model -> TextField.Model

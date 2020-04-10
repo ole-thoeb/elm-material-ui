@@ -1,35 +1,29 @@
-module MaterialUI.Icon exposing (Icon, makeIcon, view)
+module MaterialUI.Icon exposing (Icon, makeIcon, view, button)
 
-import Color exposing (Color)
 import Element exposing (Element)
 import MaterialUI.Icons.Internal as Internal
+import MaterialUI.Internal.Icon.Implementation as Icon
+import MaterialUI.Internal.Icon.Model as Icon
+import MaterialUI.Internal.Model as MaterialUI
 import MaterialUI.Theme as Theme exposing (Theme)
-import Svg exposing (Svg)
 
 
-type Icon msg
-    = Icon (Internal.Icon msg)
+type alias Icon msg = Icon.Icon msg
+
+
+type alias IconButton a msg = Icon.IconButton a msg
 
 
 makeIcon : Internal.Icon msg -> Icon msg
 makeIcon =
-    Icon
+    Icon.makeIcon
 
 
 view : Theme a -> Theme.Color a -> Int -> Icon msg -> Element msg
-view theme colorkey size (Icon icon) =
-    let
-        color =
-            Theme.getColor colorkey theme
-                |> Element.toRgb
-                |> Color.fromRgba
-    in
-    Element.el
-        [ Element.width <| Element.px size
-        , Element.height <| Element.px size
-        ]
-        (Element.html
-            (Svg.svg []
-                [ icon color size ]
-            )
-        )
+view =
+    Icon.view
+
+
+button : MaterialUI.Model a msg -> List (Element.Attribute msg) -> IconButton a msg -> Element msg
+button =
+    Icon.button
