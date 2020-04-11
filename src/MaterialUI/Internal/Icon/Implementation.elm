@@ -12,6 +12,7 @@ import Element exposing (Attribute, Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Html.Attributes as Attributes
 import Html.Events as HtmlEvent
 import Json.Decode as Decode
 import MaterialUI.Icons.Internal as Internal
@@ -54,32 +55,59 @@ button mui attrs iBut =
                 ]
             , Element.htmlAttribute <| HtmlEvent.onMouseEnter (lift Icon.MouseEnter)
             , Element.htmlAttribute <| HtmlEvent.onMouseLeave (lift Icon.MouseLeave)
-            ] ++ if model.hovered then
-                [ Element.below <| Element.el
-                    [ Element.paddingEach { top = 8, bottom = 0, left = 0, right = 0 }
-                    , Element.htmlAttribute <|
-                        HtmlEvent.stopPropagationOn "click" (Decode.succeed ( lift Icon.NoOp, True ))
+            ]
+        tooltip = Element.below <| Element.el
+            [ Element.paddingEach { top = 8, bottom = 0, left = 0, right = 0 }
+            --, dontPropagate lift "click"
+            --, dontPropagate lift "dblclick"
+            --, dontPropagate lift "mousedown"
+            --, dontPropagate lift "mouseup"
+            --, dontPropagate lift "mouseenter"
+            --, dontPropagate lift "mouseleave"
+            --, dontPropagate lift "mouseover"
+            ]
+            <| Text.view
+                ([ Element.centerX
+                , Element.padding 8
+                , Font.color mui.theme.color.surface
+                , Background.color <| Theme.setAlpha 0.9 mui.theme.color.onSurface
+                , Border.rounded 4
+                , elementCss "transition" "transform 0.1s ease-in-out"
+                ] ++ if model.hovered then
+                    [ elementCss "transform" "scale(1)"
+                    , elementCss "transition-delay" "0.3s"
                     ]
-                    <| Text.view
-                        [ Element.centerX
-                        , Element.padding 8
-                        , Font.color mui.theme.color.onSurface
-                        , Background.color <| Theme.setAlpha 0.1 mui.theme.color.onSurface
-                        ]
-                        iBut.tooltip
-                        Theme.Caption
-                        mui.theme
-                ]
-            else
-                []
+                else
+                    [ elementCss "transform" "scale(0)"
+                    ]
+                )
+                iBut.tooltip
+                Theme.Caption
+                mui.theme
     in
-    Element.el attr
-        (Element.html
-            (Svg.svg []
-                [ icon iconColor iBut.size ]
+    Element.el
+        [ tooltip ]
+        <| Element.el attr
+            (Element.html
+                (Svg.svg []
+                    [ icon iconColor iBut.size ]
+                )
             )
-        )
 
+
+--wrapForTooltip : MaterialUI.Model a msg -> Element msg -> String -> Element msg
+--wrapForTooltip mui element toolTipText =
+--    Element.el
+
+dontPropagate : (Icon.Msg -> msg) -> String -> Element.Attribute msg
+dontPropagate lift eventName =
+    Element.htmlAttribute <|
+        HtmlEvent.stopPropagationOn eventName (Decode.succeed ( lift Icon.NoOp, True ))
+
+
+elementCss : String -> String -> Element.Attribute msg
+elementCss property value =
+    Element.htmlAttribute <| Attributes.style property value
 
 makeIcon : Internal.Icon msg -> Icon msg
 makeIcon =
