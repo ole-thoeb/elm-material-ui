@@ -14,7 +14,7 @@ import MaterialUI.MaterilaUI as MaterialUI
 import MaterialUI.Text as Text
 import MaterialUI.TextFieldM as TextField
 import MaterialUI.Theme as Theme
-import MaterialUI.Themes.Dark as Dark
+import MaterialUI.Tooltip as Tooltip
 
 
 type alias Model =
@@ -34,7 +34,7 @@ type Msg
 
 init : Model
 init =
-    { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme-} Dark.theme
+    { mui = MaterialUI.defaultModel Mui Theme.defaultTheme--} Dark.theme
     , text1 = ""
     , text2 = ""
     , copyCount = 0
@@ -85,19 +85,26 @@ view model =
                 , errorText = Nothing
                 , helperText = Nothing
                 }
-            , TextField.managed model.mui
+            , Tooltip.view model.mui
                 [ Element.width Element.fill
                 ]
-                { index = "tf2"
-                , label = "TextField"
-                , hideLabel = False
-                , type_ = TextField.Filled
-                , color = Theme.Primary
-                , text = model.text2
-                , onChange = Text2
-                , errorText = Nothing
-                , helperText = Nothing
+                { index = "tttf1"
+                , text = "Textfield with tooltip that has a super long tooltip u now"
+                , position = Tooltip.bottom
                 }
+                <| TextField.managed model.mui
+                    [ Element.width Element.fill
+                    ]
+                    { index = "tf2"
+                    , label = "TextField"
+                    , hideLabel = False
+                    , type_ = TextField.Filled
+                    , color = Theme.Primary
+                    , text = model.text2
+                    , onChange = Text2
+                    , errorText = Nothing
+                    , helperText = Nothing
+                    }
             , Element.row
                 [ Element.width Element.fill
                 , Element.spacing 8

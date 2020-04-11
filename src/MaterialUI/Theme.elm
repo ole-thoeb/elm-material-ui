@@ -22,10 +22,8 @@ module MaterialUI.Theme exposing
 
 import Color
 import Element exposing (Attribute, Element)
-import Element.Background
 import Element.Border
 import Element.Font
-import MaterialColor
 
 
 transparent : Element.Color
@@ -81,6 +79,8 @@ type Color a
     | OnBackground
     | Surface
     | OnSurface
+    | Tooltip
+    | OnTooltip
     | Error
     | OnError
     | Custom Element.Color
@@ -95,6 +95,7 @@ type alias ColorTheme a =
     , secondaryVariant : Element.Color
     , background : Element.Color
     , surface : Element.Color
+    , tooltip : Element.Color
     , error : Element.Color
     , onPrimary : Element.Color
     , onPrimaryVariant : Element.Color
@@ -102,6 +103,7 @@ type alias ColorTheme a =
     , onSecondaryVariant : Element.Color
     , onBackground : Element.Color
     , onSurface : Element.Color
+    , onTooltip : Element.Color
     , onError : Element.Color
     , alternative : List ( a, Element.Color )
     }
@@ -145,6 +147,12 @@ onColor key =
 
         OnSurface ->
             Surface
+
+        Tooltip ->
+            OnTooltip
+
+        OnTooltip ->
+            Tooltip
 
         Error ->
             OnError
@@ -201,6 +209,12 @@ getColor key { color } =
 
         OnSurface ->
             color.onSurface
+
+        Tooltip ->
+            color.tooltip
+
+        OnTooltip ->
+            color.onTooltip
 
         Error ->
             color.error
@@ -275,6 +289,7 @@ type alias ShapeSchema =
         { filled : Shape
         , outlined : Shape
         }
+    , tooltip : Shape
     }
 
 
@@ -451,6 +466,7 @@ defaultTheme =
         , secondaryVariant = Element.rgb255 1 135 134 -- #018786
         , background = toElementColor Color.white
         , surface = toElementColor Color.white
+        , tooltip = Element.rgb255 97 97 97 -- #FF616161
         , error = Element.rgb255 176 0 32 -- #B00020
         , onPrimary = toElementColor Color.white
         , onPrimaryVariant = toElementColor Color.white
@@ -458,6 +474,7 @@ defaultTheme =
         , onSecondaryVariant = toElementColor Color.white
         , onBackground = toElementColor Color.black
         , onSurface = toElementColor Color.black
+        , onTooltip = toElementColor Color.white
         , onError = toElementColor Color.white
         , alternative = []
         }
@@ -468,7 +485,9 @@ defaultTheme =
             { filled = shapeRoundedDpEach 4 4 0 0
             , outlined = shapeRoundedDp 4
             }
+        , tooltip = shapeRoundedDp 4
         }
+
     , typescale = defaultTypescale
     }
 

@@ -1,7 +1,9 @@
-module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSet)
+module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSet, elementCss)
 
 
 import Dict exposing (Dict)
+import Element
+import Html.Attributes as Attributes
 
 
 type alias Index = String
@@ -32,3 +34,8 @@ update get_set update_ msg index  store =
         updatedModel = update_ msg model
     in
     get_set.set index updatedModel store
+
+
+elementCss : String -> String -> Element.Attribute msg
+elementCss property value =
+    Element.htmlAttribute <| Attributes.style property value
