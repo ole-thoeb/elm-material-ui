@@ -7,6 +7,7 @@ import Element.Background as Background
 import Element.Events as Events
 import Element.Font as Font
 import Html exposing (Html)
+import MaterialUI.ColorStateList as ColorStateList exposing (ColorStateList, transparent)
 import MaterialUI.Icon as Icon
 import MaterialUI.Icons.Content as Content
 import MaterialUI.Internal.TextField.Model as TextField
@@ -14,6 +15,7 @@ import MaterialUI.MaterilaUI as MaterialUI
 import MaterialUI.Text as Text
 import MaterialUI.TextFieldM as TextField
 import MaterialUI.Theme as Theme
+import MaterialUI.Themes.Dark as Dark
 import MaterialUI.Tooltip as Tooltip
 
 
@@ -34,7 +36,7 @@ type Msg
 
 init : Model
 init =
-    { mui = MaterialUI.defaultModel Mui Theme.defaultTheme--} Dark.theme
+    { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
     , text1 = ""
     , text2 = ""
     , copyCount = 0
@@ -109,20 +111,28 @@ view model =
                 [ Element.width Element.fill
                 , Element.spacing 8
                 ]
-                [ Icon.button
-                    model.mui
-                    [ Events.onClick IconButton
-                    ]
+                [ Icon.button model.mui []
                     { index = "iBut"
-                    , color = Theme.OnBackground
+                    , onClick = IconButton
+                    , color =
+                        { transparentCSL
+                        | idle = ColorStateList.Color 0.9 Theme.OnBackground
+                        , hovered = ColorStateList.Color 0.9 Theme.Primary
+                        , mouseDown = ColorStateList.Color 1 Theme.Primary
+                        }
+                    , background = transparentCSL
                     , size = 24
-                    , tooltip = "Copy the Id"
+                    , tooltip = "Copy the Id gogoggogogo"
                     , icon = Content.content_copy
                     }
                 , Text.view [] (String.fromInt model.copyCount) Theme.Body1 theme
                 ]
             ]
 
+
+transparentCSL : ColorStateList a
+transparentCSL =
+    ColorStateList.all ColorStateList.transparent
 
 
 main =

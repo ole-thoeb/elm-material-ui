@@ -11,13 +11,16 @@ import Dict
 import Element exposing (Attribute, Element)
 import Element.Background as Background
 import Element.Border as Border
+import Element.Events as Event
 import Html.Events as HtmlEvent
 import Json.Decode as Decode
+import MaterialUI.ColorStateList as ColorStateList
 import MaterialUI.Icons.Internal as Internal
 import MaterialUI.Internal.Component as Component exposing (Index, Indexed)
 import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as MaterialUI
 import MaterialUI.Internal.Icon.Model as Icon exposing (Icon, IconButton)
+import MaterialUI.Internal.State as State
 import MaterialUI.Theme as Theme exposing (Theme)
 import MaterialUI.Internal.Tooltip.Implementation as Tooltip
 import MaterialUI.Internal.Tooltip.Model as Tooltip
@@ -31,26 +34,30 @@ button mui attrs iBut =
         lift = mui.lift << Message.IconMsg index
         model = Maybe.withDefault Icon.defaultModel (Dict.get index mui.icon)
 
-        color = Theme.getColor iBut.color mui.theme
-        iconColor = color
+        color = ColorStateList.color iBut.color mui.theme
+        background = ColorStateList.color iBut.background mui.theme
+        iconColor = color (State.colorListState model)
             |> Element.toRgb
             |> Color.fromRgba
+
         icon = case iBut.icon of
             Icon.Icon i -> i
         padding = 8
         attr = attrs ++
+            State.install (lift << Icon.State) ++
             [ Element.width <| Element.px (iBut.size + 2 * padding)
             , Element.height <| Element.px (iBut.size + 2 * padding)
             , Element.padding padding
             , Border.rounded 50
+            , Event.onClick iBut.onClick
             , Element.mouseDown
-                [ Background.color (color |> Theme.setAlpha 0.2)
+                [ Background.color <| background ColorStateList.MouseDown
                 ]
             , Element.focused
-                [ Background.color (color |> Theme.setAlpha 0.15)
+                [ Background.color <| background ColorStateList.Focused
                 ]
             , Element.mouseOver
-                [ Background.color (color |> Theme.setAlpha 0.1)
+                [ Background.color <| background ColorStateList.Hovered
                 ]
             ]
     in
@@ -109,11 +116,8 @@ update =
 update_ : Icon.Msg -> Icon.Model -> Icon.Model
 update_ msg model =
     case msg of
-        Icon.MouseEnter ->
-            { model | hovered = True }
-
-        Icon.MouseLeave ->
-            { model | hovered = False }
+        Icon.State subMsg ->
+            State.update subMsg model
 
         Icon.NoOp ->
             model
