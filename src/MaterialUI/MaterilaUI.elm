@@ -1,4 +1,4 @@
-module MaterialUI.MaterilaUI exposing (Model, defaultModel, update, Msg)
+module MaterialUI.MaterilaUI exposing (Model, defaultModel, update, Msg, subscriptions)
 
 
 import MaterialUI.Internal.Icon.Implementation as Icon
@@ -31,3 +31,8 @@ update msg model =
 
         Message.TooltipMsg index subMsg ->
             Tooltip.update subMsg index model
+
+
+subscriptions : Model t msg -> Sub msg
+subscriptions model =
+    Tooltip.subscriptions model

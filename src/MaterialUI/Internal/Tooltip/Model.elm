@@ -24,6 +24,7 @@ defaultModel =
 type Msg
     = MouseEnter
     | MouseLeave
+    | BrowserAction
     | NoOp
 
 

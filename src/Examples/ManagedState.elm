@@ -4,10 +4,9 @@ module Examples.ManagedState exposing (..)
 import Browser
 import Element
 import Element.Background as Background
-import Element.Events as Events
 import Element.Font as Font
-import Html exposing (Html)
-import MaterialUI.ColorStateList as ColorStateList exposing (ColorStateList, transparent)
+import Json.Decode as Decode
+import MaterialUI.ColorStateList as ColorStateList exposing (ColorStateList)
 import MaterialUI.Icon as Icon
 import MaterialUI.Icons.Content as Content
 import MaterialUI.Internal.TextField.Model as TextField
@@ -34,37 +33,40 @@ type Msg
     | Mui MaterialUI.Msg
 
 
-init : Model
-init =
-    { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
+init : Decode.Value -> ( Model, Cmd Msg )
+init _ =
+    ({mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
     , text1 = ""
     , text2 = ""
     , copyCount = 0
     }
+    , Cmd.none
+    )
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Text1 text ->
-            { model | text1 = text }
+            ( { model | text1 = text }, Cmd.none )
 
         Text2 text ->
-            { model | text2 = text }
+            ( { model | text2 = text }, Cmd.none )
 
         IconButton ->
-            { model | copyCount = model.copyCount + 1 }
+            ( { model | copyCount = model.copyCount + 1 }, Cmd.none )
 
         Mui mui ->
-            { model | mui = MaterialUI.update mui model.mui }
+            ( { model | mui = MaterialUI.update mui model.mui }, Cmd.none )
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
     let
         theme = model.mui.theme
     in
-    Element.layout
+    { title = "Example"
+    , body = List.singleton <| Element.layout
         [ Background.color <| theme.color.background
         , Font.color <| theme.color.onBackground
         ]
@@ -128,6 +130,8 @@ view model =
                 , Text.view [] (String.fromInt model.copyCount) Theme.Body1 theme
                 ]
             ]
+    }
+
 
 
 transparentCSL : ColorStateList a
@@ -135,9 +139,15 @@ transparentCSL =
     ColorStateList.all ColorStateList.transparent
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    MaterialUI.subscriptions model.mui
+
+
 main =
-    Browser.sandbox
+    Browser.document
         { init = init
         , update = update
         , view = view
+        , subscriptions = subscriptions
         }

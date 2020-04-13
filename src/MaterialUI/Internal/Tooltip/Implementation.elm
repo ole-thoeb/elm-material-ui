@@ -1,9 +1,10 @@
 module MaterialUI.Internal.Tooltip.Implementation exposing
     ( view
     , update
-    )
+    , subscriptions)
 
 
+import Browser.Events
 import Dict
 import Element exposing (Attribute, Element)
 import Element.Background as Background
@@ -125,3 +126,26 @@ update_ msg model =
 
         Tooltip.NoOp ->
             model
+
+        Tooltip.BrowserAction ->
+            { model | hovered = False }
+
+
+subscriptions : MaterialUI.Model a msg -> Sub msg
+subscriptions mui =
+    let
+        lift = \index -> mui.lift << Message.TooltipMsg index
+    in
+    Dict.foldr (\index model acc ->  Sub.map (lift index) (subscriptions_ model) :: acc) [] mui.tooltip
+        |> Sub.batch
+
+
+subscriptions_ : Tooltip.Model -> Sub Tooltip.Msg
+subscriptions_ _ =
+    let
+        browserAction = Decode.succeed Tooltip.BrowserAction
+    in
+    Sub.batch
+        [ Browser.Events.onMouseDown browserAction
+        , Browser.Events.onKeyDown browserAction
+        ]
