@@ -11,6 +11,7 @@ import MaterialUI.Icon as Icon
 import MaterialUI.Icons.Content as Content
 import MaterialUI.Internal.TextField.Model as TextField
 import MaterialUI.MaterilaUI as MaterialUI
+import MaterialUI.Snackbar as Snackbar
 import MaterialUI.Text as Text
 import MaterialUI.TextFieldM as TextField
 import MaterialUI.Theme as Theme
@@ -35,12 +36,24 @@ type Msg
 
 init : Decode.Value -> ( Model, Cmd Msg )
 init _ =
-    ({mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
-    , text1 = ""
-    , text2 = ""
-    , copyCount = 0
-    }
-    , Cmd.none
+    let
+        model =
+            { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
+            , text1 = ""
+            , text2 = ""
+            , copyCount = 0
+            }
+        snackbar =
+            { text = "Snackbar test"
+            , duration = Snackbar.short
+            , position = Snackbar.centered
+            , action = Nothing
+            }
+
+        ( mui, effects ) = Snackbar.enqueue snackbar "snackbar" model.mui
+    in
+    ( { model | mui = mui }
+    , effects
     )
 
 
@@ -54,10 +67,21 @@ update msg model =
             ( { model | text2 = text }, Cmd.none )
 
         IconButton ->
-            ( { model | copyCount = model.copyCount + 1 }, Cmd.none )
+            let
+                ( mui, effects ) = Snackbar.enqueue
+                    { text = "Copied!!!"
+                    , duration = Snackbar.short
+                    , position = Snackbar.centered
+                    , action = Nothing
+                    }
+                    "snackbar"
+                    model.mui
+            in
+            ( { model | copyCount = model.copyCount + 1, mui = mui }, effects )
 
         Mui mui ->
-            ( { model | mui = MaterialUI.update mui model.mui }, Cmd.none )
+            MaterialUI.update mui model.mui
+             |> Tuple.mapFirst (\upMui -> { model | mui = upMui })
 
 
 view : Model -> Browser.Document Msg
@@ -129,6 +153,7 @@ view model =
                     }
                 , Text.view [] (String.fromInt model.copyCount) Theme.Body1 theme
                 ]
+            , Snackbar.view model.mui "snackbar"
             ]
     }
 

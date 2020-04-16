@@ -102,33 +102,33 @@ dontPropagate lift eventName =
         HtmlEvent.stopPropagationOn eventName (Decode.succeed ( lift Tooltip.NoOp, True ))
 
 
-type alias Store s = { s | tooltip : Indexed Tooltip.Model }
+type alias Store s msg = { s | tooltip : Indexed Tooltip.Model, lift : Message.Msg -> msg }
 
 
-getSet : Component.GetSet (Store s) Tooltip.Model
+getSet : Component.GetSetLift (Store s msg) Tooltip.Model
 getSet =
     Component.getSet .tooltip (\model store -> { store | tooltip = model} ) Tooltip.defaultModel
 
 
-update : Tooltip.Msg -> Index -> Store s -> Store s
-update =
-    Component.update getSet update_
+update : Tooltip.Msg -> Index -> Store s msg -> ( Store s msg, Cmd msg )
+update msg index store =
+    Component.update getSet (store.lift << Message.TooltipMsg index) update_ msg index store
 
 
-update_ : Tooltip.Msg -> Tooltip.Model -> Tooltip.Model
+update_ : Tooltip.Msg -> Tooltip.Model -> ( Tooltip.Model, Cmd Tooltip.Msg )
 update_ msg model =
     case msg of
         Tooltip.MouseEnter ->
-            { model | hovered = True }
+            ( { model | hovered = True }, Cmd.none )
 
         Tooltip.MouseLeave ->
-            { model | hovered = False }
+            ( { model | hovered = False }, Cmd.none )
 
         Tooltip.NoOp ->
-            model
+            ( model, Cmd.none )
 
         Tooltip.BrowserAction ->
-            { model | hovered = False }
+            ( { model | hovered = False }, Cmd.none )
 
 
 subscriptions : MaterialUI.Model a msg -> Sub msg

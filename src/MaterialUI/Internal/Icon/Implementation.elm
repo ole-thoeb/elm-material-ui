@@ -100,24 +100,24 @@ view theme colorkey size (Icon.Icon icon) =
         )
 
 
-type alias Store s = { s | icon : Indexed Icon.Model }
+type alias Store s msg = { s | icon : Indexed Icon.Model, lift : Message.Msg -> msg }
 
 
-getSet : Component.GetSet (Store s) Icon.Model
+getSet : Component.GetSetLift (Store s msg) Icon.Model
 getSet =
     Component.getSet .icon (\model store -> { store | icon = model} ) Icon.defaultModel
 
 
-update : Icon.Msg -> Index -> Store s -> Store s
-update =
-    Component.update getSet update_
+update : Icon.Msg -> Index -> Store s msg -> ( Store s msg, Cmd msg )
+update msg index store =
+    Component.update getSet (store.lift << Message.IconMsg index) update_ msg index store
 
 
-update_ : Icon.Msg -> Icon.Model -> Icon.Model
+update_ : Icon.Msg -> Icon.Model -> ( Icon.Model, Cmd Icon.Msg )
 update_ msg model =
     case msg of
         Icon.State subMsg ->
-            State.update subMsg model
+            ( State.update subMsg model, Cmd.none )
 
         Icon.NoOp ->
-            model
+            ( model, Cmd.none )

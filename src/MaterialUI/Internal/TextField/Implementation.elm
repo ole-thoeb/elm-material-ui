@@ -289,24 +289,24 @@ text attrs field theme =
                )
 
 
-type alias Store s = { s | textfield : Indexed TextField.Model }
+type alias Store s msg = { s | textfield : Indexed TextField.Model, lift : Message.Msg -> msg }
 
 
-getSet : Component.GetSet (Store s) TextField.Model
+getSet : Component.GetSetLift (Store s msg) TextField.Model
 getSet =
     Component.getSet .textfield (\model store -> { store | textfield = model }) TextField.defaultModel
 
 
-update : TextField.Msg -> Index -> Store s -> Store s
-update =
-    Component.update getSet update_
+update : TextField.Msg -> Index -> Store s msg -> ( Store s msg, Cmd msg )
+update msg index store =
+    Component.update getSet (store.lift << Message.TextFieldMsg index) update_ msg index store
 
 
-update_ : TextField.Msg -> TextField.Model -> TextField.Model
+update_ : TextField.Msg -> TextField.Model -> ( TextField.Model, Cmd TextField.Msg )
 update_ msg model =
     case msg of
         TextField.ComponentFocused ->
-            { model | focused = True }
+            ( { model | focused = True }, Cmd.none )
 
         TextField.ComponentFocusedLost ->
-            { model | focused = False }
+            ( { model | focused = False }, Cmd.none )
