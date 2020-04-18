@@ -39,6 +39,7 @@ view mui index =
     let
         lift = mui.lift << Message.SnackbarMsg index
         model = Maybe.withDefault Snackbar.defaultModel (Dict.get index mui.snackbar)
+        invTheme = Theme.inverted mui.theme
     in
     case model.status of
         Snackbar.Active snackbar state  ->
@@ -81,8 +82,8 @@ view mui index =
                     [ Element.width Element.fill
                     , Element.padding 16
                     , Element.spacing 4
-                    , Background.color mui.theme.color.tooltip
-                    , Font.color mui.theme.color.onTooltip
+                    , Background.color invTheme.color.surface
+                    , Font.color invTheme.color.onSurface
                     , Border.rounded 8
                     ]
                     [ text
@@ -104,7 +105,7 @@ actionToButton action theme lift =
         , onPress = Just <| lift Snackbar.Clicked
         , disabled = False
         }
-        theme
+        (Theme.inverted theme)
 
 
 type alias Store s a msg =

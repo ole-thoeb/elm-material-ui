@@ -39,7 +39,7 @@ init : Decode.Value -> ( Model, Cmd Msg )
 init _ =
     let
         model =
-            { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} DefaultTheme.light
+            { mui = MaterialUI.defaultModel Mui DefaultTheme.dark
             , text1 = ""
             , text2 = ""
             , copyCount = 0
