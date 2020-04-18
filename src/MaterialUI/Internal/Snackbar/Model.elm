@@ -11,8 +11,7 @@ module MaterialUI.Internal.Snackbar.Model exposing
     )
 
 
-import MaterialUI.Internal.Component exposing (Index)
-import MaterialUI.Theme as Theme
+import MaterialUI.Theme as Theme exposing (Theme)
 
 
 type Status a msg
@@ -22,8 +21,9 @@ type Status a msg
 
 type State
     = Showing
-    | FadingIn
-    | FadingOut
+    | FadingIn Float
+    | FadingOut Float
+
 
 type alias Model a msg =
     { queue : List (Content a msg)
@@ -42,10 +42,9 @@ defaultModel =
 
 type Msg
     = NoOp
-    | Hide Int
-    | Show Int
     | Dismiss Int
     | Clicked
+    | AnimationFrame Float
 
 
 type Position

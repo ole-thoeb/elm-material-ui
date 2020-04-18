@@ -100,7 +100,11 @@ view theme colorkey size (Icon.Icon icon) =
         )
 
 
-type alias Store s msg = { s | icon : Indexed Icon.Model, lift : Message.Msg -> msg }
+type alias Store s msg =
+    { s
+    | icon : Indexed Icon.Model
+    , lift : Message.Msg -> msg
+    }
 
 
 getSet : Component.GetSetLift (Store s msg) Icon.Model

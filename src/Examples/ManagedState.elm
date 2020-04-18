@@ -32,6 +32,7 @@ type Msg
     | Text2 String
     | IconButton
     | Mui MaterialUI.Msg
+    | SnackbarAction
 
 
 init : Decode.Value -> ( Model, Cmd Msg )
@@ -69,10 +70,14 @@ update msg model =
         IconButton ->
             let
                 ( mui, effects ) = Snackbar.enqueue
-                    { text = "Copied!!!"
+                    { text = "Copied!!! Yay some longer text that really is super long"
                     , duration = Snackbar.short
                     , position = Snackbar.centered
-                    , action = Nothing
+                    , action = Just
+                        { text = "Action Baby +10"
+                        , color = Theme.Primary
+                        , action = SnackbarAction
+                        }
                     }
                     "snackbar"
                     model.mui
@@ -82,6 +87,9 @@ update msg model =
         Mui mui ->
             MaterialUI.update mui model.mui
              |> Tuple.mapFirst (\upMui -> { model | mui = upMui })
+
+        SnackbarAction ->
+            ( { model | copyCount = model.copyCount + 10}, Cmd.none )
 
 
 view : Model -> Browser.Document Msg

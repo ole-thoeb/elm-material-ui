@@ -11,7 +11,6 @@ import MaterialUI.ColorStateList exposing (ColorStateList)
 import MaterialUI.Icons.Internal as Internal
 import MaterialUI.Internal.Component exposing (Index)
 import MaterialUI.Internal.State as State
-import MaterialUI.Theme as Theme
 
 
 type alias Model =

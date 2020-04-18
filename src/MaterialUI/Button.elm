@@ -10,7 +10,8 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import MaterialUI.Icon as Icon exposing (Icon)
+import MaterialUI.Internal.Icon.Implementation as Icon
+import MaterialUI.Internal.Icon.Model as Icon exposing (Icon)
 import MaterialUI.Internal as Internal
 import MaterialUI.Theme as Theme
 

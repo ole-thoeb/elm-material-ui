@@ -1,4 +1,4 @@
-module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSetLift, elementCss, delayedCmd, cmd)
+module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSetLift, elementCss, delayedCmd, cmd, subscriptions)
 
 
 import Dict exposing (Dict)
@@ -42,6 +42,20 @@ update get_set lift update_ msg index store =
         ( updatedModel, effects ) = update_ msg model
     in
     ( get_set.set index updatedModel store, Cmd.map lift effects )
+
+
+subscriptions : ({ store | lift : mOut -> msg } -> Indexed model)
+    -> (Index -> mIn -> mOut)
+    -> { store | lift : mOut -> msg }
+    -> (model -> Sub mIn)
+    -> Sub msg
+subscriptions get lift store sub =
+    let
+        lift_ index = store.lift << lift index
+    in
+    Dict.foldr (\index model acc ->  Sub.map (lift_ index) (sub model) :: acc) [] (get store)
+        |> Sub.batch
+
 
 
 elementCss : String -> String -> Element.Attribute msg

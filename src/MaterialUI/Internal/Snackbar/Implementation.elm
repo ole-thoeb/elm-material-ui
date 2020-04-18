@@ -1,25 +1,29 @@
 module MaterialUI.Internal.Snackbar.Implementation exposing
     ( view
     , update
-    , enqueue)
+    , enqueue
+    , subscriptions
+    )
 
 
+import Browser.Events
 import Dict
 import Element exposing (Attribute, Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import MaterialUI.Button as Button
 import MaterialUI.Internal.Component as Component exposing (Index, Indexed)
 import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as MaterialUI
 import MaterialUI.Internal.Snackbar.Model as Snackbar exposing (Content)
 import MaterialUI.Text as Text
-import MaterialUI.Theme as Theme
+import MaterialUI.Theme as Theme exposing (Theme)
 
 
 fadeInDuration : Float
 fadeInDuration =
-    300
+    100
 
 
 fadeOutDuration : Float
@@ -33,7 +37,7 @@ view : MaterialUI.Model a msg
     -> Element msg
 view mui index =
     let
-        lift = mui.lift << Message.TooltipMsg index
+        lift = mui.lift << Message.SnackbarMsg index
         model = Maybe.withDefault Snackbar.defaultModel (Dict.get index mui.snackbar)
     in
     case model.status of
@@ -50,49 +54,64 @@ view mui index =
                         ]
 
                 opacity = case state of
-                    Snackbar.Showing ->
-                        [ Component.elementCss "opacity" "1"
-                        , Component.elementCss "transition" <| "opacity " ++ String.fromFloat fadeOutDuration ++ "ms"
-                        ]
+                    Snackbar.Showing -> 1
+                    Snackbar.FadingIn progress -> progress
+                    Snackbar.FadingOut progress -> progress
 
-                    Snackbar.FadingIn ->
-                        [ Component.elementCss "opacity" "1"
-                        , Component.elementCss "transition" <| "opacity " ++ String.fromFloat fadeInDuration ++ "ms"
-                        ]
+                text = Text.wrapping
+                    [ Element.alignLeft
+                    , Element.width (Element.fillPortion 1 |> Element.minimum 150)
+                    ]
+                    snackbar.text Theme.Body1 mui.theme
 
-                    Snackbar.FadingOut ->
-                        [ Component.elementCss "opacity" "0"
-                        , Component.elementCss "transition" <| "opacity " ++ String.fromFloat fadeOutDuration ++ "ms"
-                        ]
-
-
+                button = snackbar.action
+                    |>Maybe.map (\action -> actionToButton action mui.theme lift)
+                    |> Maybe.withDefault Element.none
             in
             Element.el
-                ( alignAttr ++
-                  opacity ++
-                [ Element.padding 16
-                , Element.width (Element.fill |> Element.maximum 500)
-                , Component.elementCss "position" "fixed"
-                , Component.elementCss "bottom" "0"
-                ]
+                (alignAttr
+                    ++ [ Element.padding 16
+                    , Element.width (Element.fill |> Element.maximum 500)
+                    , Component.elementCss "position" "fixed"
+                    , Component.elementCss "bottom" "0"
+                    , Component.elementCss "opacity" <| String.fromFloat opacity
+                    ]
                 )
-                    <| Element.row
-                        [ Element.width Element.fill
-                        , Element.padding 16
-                        , Background.color mui.theme.color.onSurface
-                        , Font.color mui.theme.color.surface
-                        , Border.rounded 8
-                        ]
-                        [ Text.view
-                            []
-                            snackbar.text Theme.Body1 mui.theme
-                        ]
+                <| Element.wrappedRow
+                    [ Element.width Element.fill
+                    , Element.padding 16
+                    , Element.spacing 4
+                    , Background.color mui.theme.color.tooltip
+                    , Font.color mui.theme.color.onTooltip
+                    , Border.rounded 8
+                    ]
+                    [ text
+                    , button
+                    ]
 
         Snackbar.Nil ->
             Element.none
 
 
-type alias Store s a msg = { s | snackbar : Indexed (Snackbar.Model a msg), lift : Message.Msg -> msg }
+actionToButton : Snackbar.Action a msg -> Theme a -> (Snackbar.Msg -> msg) -> Element msg
+actionToButton action theme lift =
+    Button.text
+        [ Element.alignRight
+        ]
+        { icon = Nothing
+        , color = action.color
+        , text = action.text
+        , onPress = Just <| lift Snackbar.Clicked
+        , disabled = False
+        }
+        theme
+
+
+type alias Store s a msg =
+    { s
+    | snackbar : Indexed (Snackbar.Model a msg)
+    , lift : Message.Msg -> msg
+    }
 
 
 getSet : Component.GetSetLift (Store s a msg) (Snackbar.Model a msg)
@@ -112,52 +131,46 @@ update msg index store =
 
 update_ : (Snackbar.Msg -> msg) -> Snackbar.Msg -> Snackbar.Model a msg -> ( Snackbar.Model a msg, Cmd msg )
 update_ lift msg model =
-    case msg of
-        Snackbar.NoOp ->
-            ( model, Cmd.none )
+    case ( msg, model.status ) of
+        ( Snackbar.Dismiss id, Snackbar.Active content _ )  ->
+            if id == model.snackbarId then
+                ( { model
+                | status = Snackbar.Active content (Snackbar.FadingOut 1)
+                }, Cmd.none
+                )
+            else
+                ( model, Cmd.none )
 
-        Snackbar.Hide id ->
-            if (id == model.snackbarId) then
-                { model | status = Snackbar.Nil }
-                    |> tryDequeue
+        ( Snackbar.Clicked, Snackbar.Active content Snackbar.Showing)  ->
+            let
+                ( updatedModel, effects ) = update_ lift (Snackbar.Dismiss model.snackbarId) model
+                userAction = content.action
+                    |> Maybe.map (\action -> [ Component.cmd action.action ])
+                    |> Maybe.withDefault []
+            in
+            ( updatedModel, Cmd.batch (effects :: userAction) )
+
+        ( Snackbar.AnimationFrame delta, Snackbar.Active content (Snackbar.FadingIn progress) ) ->
+            let
+                newProgress = progress + (delta / fadeInDuration)
+            in
+            if newProgress >= 1 then
+                ( { model | status = Snackbar.Active content Snackbar.Showing }, Cmd.none )
+            else
+                ( { model | status = Snackbar.Active content (Snackbar.FadingIn newProgress) }, Cmd.none )
+
+        ( Snackbar.AnimationFrame delta, Snackbar.Active content (Snackbar.FadingOut progress) ) ->
+            let
+                newProgress = progress - (delta / fadeOutDuration)
+            in
+            if newProgress <= 0 then
+                tryDequeue { model | status = Snackbar.Nil }
                     |> Tuple.mapSecond (Cmd.map lift)
             else
-                ( model, Cmd.none )
+                ( { model | status = Snackbar.Active content (Snackbar.FadingOut newProgress) }, Cmd.none )
 
-        Snackbar.Show id ->
-            if id == model.snackbarId then case model.status of
-                Snackbar.Nil ->
-                    ( model, Cmd.none )
-
-                Snackbar.Active content _ ->
-                    ( { model | status = Snackbar.Active content Snackbar.Showing }, Cmd.none )
-            else
-                ( model, Cmd.none )
-
-
-        Snackbar.Dismiss id ->
-            if id == model.snackbarId then case model.status of
-                Snackbar.Nil ->
-                    ( model, Cmd.none )
-
-                Snackbar.Active content _ ->
-                    ( { model | status = Snackbar.Active content Snackbar.FadingOut }, Component.delayedCmd fadeOutDuration (lift <| Snackbar.Hide id) )
-            else
-                ( model, Cmd.none )
-
-        Snackbar.Clicked ->
-            case model.status of
-                Snackbar.Nil ->
-                    ( model, Cmd.none )
-                
-                Snackbar.Active content _ ->
-                    let
-                        ( updatedModel, effects ) = update_ lift (Snackbar.Dismiss model.snackbarId) model
-                        userAction = case content.action of
-                            Nothing -> []
-                            Just action -> [ Component.cmd action.action ]
-                    in
-                    ( updatedModel, Cmd.batch ([ effects ] ++ userAction) )
+        _ ->
+            ( model, Cmd.none )
 
 
 enqueue : Content a msg -> Index -> MaterialUI.Model a msg -> ( MaterialUI.Model a msg, Cmd msg )
@@ -189,17 +202,13 @@ tryDequeue model =
                             Snackbar.Short -> 4 * 1000
                             Snackbar.Long -> 10 * 1000
                         id = model.snackbarId + 1
-                        a = Debug.log "dequeue" head
                     in
                     ({model
                     | queue = rest
-                    , status = Snackbar.Active head Snackbar.FadingIn
+                    , status = Snackbar.Active head (Snackbar.FadingIn 0)
                     , snackbarId = id
                     }
-                    , Cmd.batch
-                        [ Component.delayedCmd duration <| Snackbar.Dismiss id
-                        , Component.delayedCmd fadeInDuration <| Snackbar.Show id
-                        ]
+                    , Component.delayedCmd duration <| Snackbar.Dismiss id
                     )
 
                 _ ->
@@ -209,28 +218,20 @@ tryDequeue model =
                 ( model, Cmd.none )
 
 
+subscriptions : MaterialUI.Model a msg -> Sub msg
+subscriptions model =
+    Component.subscriptions .snackbar Message.SnackbarMsg model subscriptions_
 
 
-
-
-
-
-
---subscriptions : MaterialUI.Model a msg -> Sub msg
---subscriptions mui =
---    let
---        lift = \index -> mui.lift << Message.TooltipMsg index
---    in
---    Dict.foldr (\index model acc ->  Sub.map (lift index) (subscriptions_ model) :: acc) [] mui.tooltip
---        |> Sub.batch
---
---
---subscriptions_ : Tooltip.Model -> Sub Tooltip.Msg
---subscriptions_ _ =
---    let
---        browserAction = Decode.succeed Tooltip.BrowserAction
---    in
---    Sub.batch
---        [ Browser.Events.onMouseDown browserAction
---        , Browser.Events.onKeyDown browserAction
---        ]
+subscriptions_ : Snackbar.Model a msg -> Sub Snackbar.Msg
+subscriptions_ model =
+    let
+        isAnimating = case model.status of
+            Snackbar.Active _ (Snackbar.FadingIn _) -> True
+            Snackbar.Active _ (Snackbar.FadingOut _)-> True
+            _ -> False
+    in
+    if isAnimating then
+        Browser.Events.onAnimationFrameDelta Snackbar.AnimationFrame
+    else
+        Sub.none

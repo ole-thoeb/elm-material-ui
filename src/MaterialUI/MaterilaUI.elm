@@ -39,4 +39,7 @@ update msg model =
 
 subscriptions : Model t msg -> Sub msg
 subscriptions model =
-    Tooltip.subscriptions model
+    Sub.batch
+        [ Tooltip.subscriptions model
+        , Snackbar.subscriptions model
+        ]

@@ -16,7 +16,7 @@ import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as MaterialUI
 import MaterialUI.Internal.Tooltip.Model as Tooltip exposing (Tooltip)
 import MaterialUI.Text as Text
-import MaterialUI.Theme as Theme
+import MaterialUI.Theme as Theme exposing (Theme)
 
 
 view : MaterialUI.Model a msg
@@ -102,7 +102,11 @@ dontPropagate lift eventName =
         HtmlEvent.stopPropagationOn eventName (Decode.succeed ( lift Tooltip.NoOp, True ))
 
 
-type alias Store s msg = { s | tooltip : Indexed Tooltip.Model, lift : Message.Msg -> msg }
+type alias Store s msg =
+    { s
+    | tooltip : Indexed Tooltip.Model
+    , lift : Message.Msg -> msg
+    }
 
 
 getSet : Component.GetSetLift (Store s msg) Tooltip.Model
@@ -133,11 +137,7 @@ update_ msg model =
 
 subscriptions : MaterialUI.Model a msg -> Sub msg
 subscriptions mui =
-    let
-        lift = \index -> mui.lift << Message.TooltipMsg index
-    in
-    Dict.foldr (\index model acc ->  Sub.map (lift index) (subscriptions_ model) :: acc) [] mui.tooltip
-        |> Sub.batch
+    Component.subscriptions .tooltip Message.TooltipMsg mui subscriptions_
 
 
 subscriptions_ : Tooltip.Model -> Sub Tooltip.Msg
