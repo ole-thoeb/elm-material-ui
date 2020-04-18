@@ -15,6 +15,7 @@ import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
 import MaterialUI.Theme as Theme exposing (Theme)
+import MaterialUI.Themes.Default as DefaultTheme
 
 
 type alias ThemeList a =
@@ -69,7 +70,7 @@ themeStory themes =
         )
         (Story "Theme" [])
         themes
-        |> Story.addOption "Default" Theme.defaultTheme
+        |> Story.addOption "Default" DefaultTheme.light
 
 
 labelStory : Story String

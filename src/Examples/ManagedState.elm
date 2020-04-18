@@ -15,7 +15,7 @@ import MaterialUI.Snackbar as Snackbar
 import MaterialUI.Text as Text
 import MaterialUI.TextFieldM as TextField
 import MaterialUI.Theme as Theme
-import MaterialUI.Themes.Dark as Dark
+import MaterialUI.Themes.Default as DefaultTheme
 import MaterialUI.Tooltip as Tooltip
 
 
@@ -39,7 +39,7 @@ init : Decode.Value -> ( Model, Cmd Msg )
 init _ =
     let
         model =
-            { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} Dark.theme
+            { mui = MaterialUI.defaultModel Mui {-Theme.defaultTheme--} DefaultTheme.light
             , text1 = ""
             , text2 = ""
             , copyCount = 0
@@ -72,7 +72,7 @@ update msg model =
                 ( mui, effects ) = Snackbar.enqueue
                     { text = "Copied!!! Yay some longer text that really is super long"
                     , duration = Snackbar.short
-                    , position = Snackbar.centered
+                    , position = Snackbar.leading
                     , action = Just
                         { text = "Action Baby +10"
                         , color = Theme.Primary

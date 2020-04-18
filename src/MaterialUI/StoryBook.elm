@@ -8,7 +8,7 @@ import MaterialUI.RadioTest
 import MaterialUI.TabsTest
 import MaterialUI.TextFieldTest
 import MaterialUI.Theme exposing (Theme)
-import MaterialUI.Themes.Dark
+import MaterialUI.Themes.Default as DefaultTheme
 
 
 shelf : List ( String, Theme a ) -> Shelf
@@ -34,6 +34,6 @@ shelf themes =
 main : Program
 main =
     shelf
-        [ ( "Dark", MaterialUI.Themes.Dark.theme )
+        [ ( "Dark", DefaultTheme.dark )
         ]
         |> Bibliopola.fromShelf
