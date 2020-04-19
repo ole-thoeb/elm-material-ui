@@ -6,9 +6,11 @@ import Element
 import Element.Background as Background
 import Element.Font as Font
 import Json.Decode as Decode
+import MaterialUI.Button as Button
 import MaterialUI.ColorStateList as ColorStateList exposing (ColorStateList)
 import MaterialUI.Icon as Icon
 import MaterialUI.Icons.Content as Content
+import MaterialUI.Internal.Component exposing (Index)
 import MaterialUI.Internal.TextField.Model as TextField
 import MaterialUI.MaterilaUI as MaterialUI
 import MaterialUI.Snackbar as Snackbar
@@ -33,29 +35,56 @@ type Msg
     | IconButton
     | Mui MaterialUI.Msg
     | SnackbarAction
+    | SnackbarSet
+    | SnackbarEnqueue
+    | SnackbarEnqueueFirst
 
 
 init : Decode.Value -> ( Model, Cmd Msg )
 init _ =
     let
         model =
-            { mui = MaterialUI.defaultModel Mui DefaultTheme.dark
+            { mui = MaterialUI.defaultModel Mui DefaultTheme.light
             , text1 = ""
             , text2 = ""
             , copyCount = 0
             }
-        snackbar =
+        startSnackbar =
             { text = "Snackbar test"
             , duration = Snackbar.short
             , position = Snackbar.centered
             , action = Nothing
             }
 
-        ( mui, effects ) = Snackbar.enqueue snackbar "snackbar" model.mui
+        ( mui, effects ) = Snackbar.enqueue startSnackbar "snackbar" model.mui
     in
     ( { model | mui = mui }
     , effects
     )
+
+
+snackbar : String -> Snackbar.Snackbar a Msg
+snackbar text =
+    { text = text
+    , duration = Snackbar.short
+    , position = Snackbar.leading
+    , action = Just
+        { text = "Action Baby +10"
+        , color = Theme.Primary
+        , action = SnackbarAction
+        }
+    }
+
+
+addSnackbar : Model
+    -> (Snackbar.Snackbar a Msg -> Index -> MaterialUI.Model () Msg -> ( MaterialUI.Model () Msg, Cmd Msg ))
+    -> String
+    -> ( Model, Cmd Msg )
+addSnackbar model method text =
+    let
+        ( mui, effects ) = method (snackbar text) "snackbar" model.mui
+    in
+    ( { model | copyCount = model.copyCount + 1, mui = mui }, effects )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,29 +96,26 @@ update msg model =
         Text2 text ->
             ( { model | text2 = text }, Cmd.none )
 
-        IconButton ->
-            let
-                ( mui, effects ) = Snackbar.enqueue
-                    { text = "Copied!!! Yay some longer text that really is super long"
-                    , duration = Snackbar.short
-                    , position = Snackbar.leading
-                    , action = Just
-                        { text = "Action Baby +10"
-                        , color = Theme.Primary
-                        , action = SnackbarAction
-                        }
-                    }
-                    "snackbar"
-                    model.mui
-            in
-            ( { model | copyCount = model.copyCount + 1, mui = mui }, effects )
-
         Mui mui ->
             MaterialUI.update mui model.mui
              |> Tuple.mapFirst (\upMui -> { model | mui = upMui })
 
+        IconButton ->
+            addSnackbar model Snackbar.enqueue "Copied !!"
+
+
         SnackbarAction ->
             ( { model | copyCount = model.copyCount + 10}, Cmd.none )
+
+        SnackbarSet ->
+            addSnackbar model Snackbar.set "Set"
+
+        SnackbarEnqueue ->
+            addSnackbar model Snackbar.enqueue "Queued"
+
+        SnackbarEnqueueFirst ->
+            addSnackbar model Snackbar.enqueueFirst "EnqueueFirst"
+
 
 
 view : Model -> Browser.Document Msg
@@ -160,6 +186,41 @@ view model =
                     , icon = Content.content_copy
                     }
                 , Text.view [] (String.fromInt model.copyCount) Theme.Body1 theme
+                ]
+            , Element.row
+                [ Element.width Element.fill
+                , Element.spacing 8
+                ]
+                [ Button.outlined
+                    [ Element.width <| Element.fillPortion 1
+                    ]
+                    { icon = Nothing
+                    , text = "enqueue Snack"
+                    , onPress = Just SnackbarEnqueue
+                    , disabled = False
+                    , color = Theme.Secondary
+                    }
+                    theme
+                , Button.outlined
+                     [ Element.width <| Element.fillPortion 1
+                     ]
+                     { icon = Nothing
+                     , text = "set Snack"
+                     , onPress = Just SnackbarSet
+                     , disabled = False
+                     , color = Theme.Secondary
+                     }
+                     theme
+                , Button.outlined
+                    [ Element.width <| Element.fillPortion 1
+                    ]
+                    { icon = Nothing
+                    , text = "enqueueFirst Snack"
+                    , onPress = Just SnackbarEnqueueFirst
+                    , disabled = False
+                    , color = Theme.Secondary
+                    }
+                    theme
                 ]
             , Snackbar.view model.mui "snackbar"
             ]

@@ -1,8 +1,8 @@
 module MaterialUI.Internal.Snackbar.Implementation exposing
     ( view
     , update
-    , enqueue
     , subscriptions
+    , add
     )
 
 
@@ -29,7 +29,6 @@ fadeInDuration =
 fadeOutDuration : Float
 fadeOutDuration =
     300
-
 
 
 view : MaterialUI.Model a msg
@@ -60,7 +59,8 @@ view mui index =
                     Snackbar.FadingOut progress -> progress
 
                 text = Text.wrapping
-                    [ Element.alignLeft
+                    [ Element.padding 12
+                    , Element.alignLeft
                     , Element.width (Element.fillPortion 1 |> Element.minimum 150)
                     ]
                     snackbar.text Theme.Body1 mui.theme
@@ -75,12 +75,12 @@ view mui index =
                     , Element.width (Element.fill |> Element.maximum 500)
                     , Component.elementCss "position" "fixed"
                     , Component.elementCss "bottom" "0"
-                    , Component.elementCss "opacity" <| String.fromFloat opacity
+                    , Element.alpha opacity
                     ]
                 )
                 <| Element.wrappedRow
                     [ Element.width Element.fill
-                    , Element.padding 16
+                    , Element.paddingEach { top = 4, bottom = 4, left = 12, right = 12 }
                     , Element.spacing 4
                     , Background.color invTheme.color.surface
                     , Font.color invTheme.color.onSurface
@@ -174,49 +174,82 @@ update_ lift msg model =
             ( model, Cmd.none )
 
 
-enqueue : Content a msg -> Index -> MaterialUI.Model a msg -> ( MaterialUI.Model a msg, Cmd msg )
-enqueue snackbar index mui =
-    let
-        model = Dict.get index mui.snackbar
-            |> Maybe.withDefault Snackbar.defaultModel
-
-        ( updatedModel, effects ) = enqueue_ snackbar model
-            |> tryDequeue
-            |> Tuple.mapSecond (Cmd.map (mui.lift << Message.SnackbarMsg index))
-    in
-    ( { mui | snackbar = Dict.insert index updatedModel mui.snackbar }, effects )
-
-
-enqueue_ : Content a msg -> Snackbar.Model a msg -> Snackbar.Model a msg
-enqueue_ snackbar model =
-    { model | queue = model.queue ++ [snackbar] }
-
-
 tryDequeue : Snackbar.Model a msg -> ( Snackbar.Model a msg, Cmd Snackbar.Msg )
 tryDequeue model =
     case Debug.log "dequeueState" model.status of
         Snackbar.Nil ->
             case model.queue of
                 head :: rest ->
-                    let
-                        duration = case head.duration of
-                            Snackbar.Short -> 4 * 1000
-                            Snackbar.Long -> 10 * 1000
-                        id = model.snackbarId + 1
-                    in
-                    ({model
-                    | queue = rest
-                    , status = Snackbar.Active head (Snackbar.FadingIn 0)
-                    , snackbarId = id
-                    }
-                    , Component.delayedCmd duration <| Snackbar.Dismiss id
-                    )
+                    setSnackbar head { model | queue = rest }
 
                 _ ->
                     ( model, Cmd.none )
 
         _ ->
                 ( model, Cmd.none )
+
+
+setSnackbar : Content a msg -> Snackbar.Model a msg -> ( Snackbar.Model a msg, Cmd Snackbar.Msg )
+setSnackbar snackbar model =
+    let
+        duration = case snackbar.duration of
+            Snackbar.Short -> 4 * 1000
+            Snackbar.Long -> 10 * 1000
+        id = model.snackbarId + 1
+    in
+    ({ model | status = Snackbar.Active snackbar (Snackbar.FadingIn 0) , snackbarId = id }
+    , Component.delayedCmd duration <| Snackbar.Dismiss id
+    )
+
+
+updateSnackModel : MaterialUI.Model a msg
+    -> Index
+    -> Content a msg
+    -> ( Content a msg -> Snackbar.Model a msg -> ( Snackbar.Model a msg, Cmd Snackbar.Msg ) )
+    -> ( MaterialUI.Model a msg, Cmd msg )
+updateSnackModel mui index snackbar updateFunc =
+    let
+        model = Dict.get index mui.snackbar
+            |> Maybe.withDefault Snackbar.defaultModel
+
+        ( updatedModel, effects ) = updateFunc snackbar model
+            |> Tuple.mapSecond (Cmd.map (mui.lift << Message.SnackbarMsg index))
+    in
+    ( { mui | snackbar = Dict.insert index updatedModel mui.snackbar }, effects )
+
+
+add : MaterialUI.Model a msg
+    -> Index
+    -> Content a msg
+    -> (Content a msg -> List (Content a msg) -> List (Content a msg))
+    -> Snackbar.AddBehaviour
+    -> ( MaterialUI.Model a msg, Cmd msg )
+add mui index snackbar queueTransform behavior =
+    updateSnackModel mui index snackbar (add_ queueTransform behavior)
+
+
+add_ : (Content a msg -> List (Content a msg) -> List (Content a msg))
+    -> Snackbar.AddBehaviour
+    -> Content a msg
+    -> Snackbar.Model a msg
+    -> ( Snackbar.Model a msg, Cmd Snackbar.Msg )
+add_ queueTransform behavior snackbar model =
+    let
+        updatedModel = { model | queue = queueTransform snackbar model.queue }
+    in
+    case model.status of
+        Snackbar.Nil ->
+            updatedModel
+                |> tryDequeue
+
+        Snackbar.Active _ _ ->
+            case behavior of
+                Snackbar.KeepCurrent ->
+                    ( updatedModel, Cmd.none )
+
+                Snackbar.DismissCurrent ->
+                    ( updatedModel, Component.cmd (Snackbar.Dismiss model.snackbarId) )
+
 
 
 subscriptions : MaterialUI.Model a msg -> Sub msg

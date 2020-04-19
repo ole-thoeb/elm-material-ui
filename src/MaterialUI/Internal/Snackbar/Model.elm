@@ -8,6 +8,7 @@ module MaterialUI.Internal.Snackbar.Model exposing
     , Duration(..)
     , Status(..)
     , State(..)
+    , AddBehaviour(..)
     )
 
 
@@ -55,6 +56,11 @@ type Position
 type Duration
     = Short
     | Long
+
+
+type AddBehaviour
+    = KeepCurrent
+    | DismissCurrent
 
 
 type alias Action a msg =
