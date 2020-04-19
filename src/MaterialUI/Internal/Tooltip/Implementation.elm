@@ -1,13 +1,14 @@
 module MaterialUI.Internal.Tooltip.Implementation exposing
-    ( view
+    ( subscriptions
     , update
-    , subscriptions)
-
+    , view
+    )
 
 import Browser.Events
 import Dict
 import Element exposing (Attribute, Element)
 import Element.Background as Background
+import Element.Events as Events
 import Element.Font as Font
 import Html.Events as HtmlEvent
 import Json.Decode as Decode
@@ -19,81 +20,134 @@ import MaterialUI.Text as Text
 import MaterialUI.Theme as Theme exposing (Theme)
 
 
-view : MaterialUI.Model a msg
+animInDuration : Float
+animInDuration =
+    100
+
+
+showDelay : Float
+showDelay =
+    500
+
+
+animOutDuration : Float
+animOutDuration =
+    100
+
+
+view :
+    MaterialUI.Model a msg
     -> List (Element.Attribute msg) -- for layout attributes (same as content)
     -> Tooltip
     -> Element msg
     -> Element msg
 view mui layoutAtt tooltip content =
     let
-        index = tooltip.index
-        lift = mui.lift << Message.TooltipMsg index
-        model = Maybe.withDefault Tooltip.defaultModel (Dict.get index mui.tooltip)
-        tooltipView = Text.view
-                ([Element.padding 8
-                , Font.color mui.theme.color.onTooltip
-                , Background.color mui.theme.color.tooltip
-                , Component.elementCss "transition" "transform 0.1s ease-in-out"
-                , Component.elementCss "transition" "visibility 0.4s "
-                ]
-                ++ Theme.shapeToAttributes 100 100 mui.theme.shape.tooltip
-                ++ if model.hovered then
-                    [ Component.elementCss "transform" "scale(1)"
-                    , Component.elementCss "transition-delay" "0.3s"
-                    , Component.elementCss "visibility" "visible"
-                    ]
-                else
-                    [ Component.elementCss "transform" "scale(0)"
-                    , Component.elementCss "visibility" "hidden"
-                    ]
+        index =
+            tooltip.index
+
+        lift =
+            mui.lift << Message.TooltipMsg index
+
+        model =
+            Maybe.withDefault Tooltip.defaultModel (Dict.get index mui.tooltip)
+
+        progress =
+            case model.state of
+                Tooltip.Active Tooltip.Showing ->
+                    1
+
+                Tooltip.Active (Tooltip.AnimatingIn p) ->
+                    p
+
+                Tooltip.Active (Tooltip.AnimatingOut p) ->
+                    p
+
+                Tooltip.Active (Tooltip.Delaying _) ->
+                    0
+
+                Tooltip.Nil ->
+                    0
+
+        tooltipView =
+            Text.view
+                ([ Element.padding 8
+                 , Font.color mui.theme.color.onTooltip
+                 , Background.color mui.theme.color.tooltip
+                 ]
+                    ++ Theme.shapeToAttributes 100 100 mui.theme.shape.tooltip
+                    ++ (if progress == 0 then
+                            [ Component.elementCss "visibility" "hidden" ]
+
+                        else
+                            [ Component.elementCss "transform" <| "scale(" ++ String.fromFloat progress ++ ")"
+                            , Component.elementCss "visibility" "visible"
+                            ]
+                       )
                 )
                 tooltip.text
                 Theme.Caption
                 mui.theme
+
         positionCss =
-            if model.hovered then
-                [ Component.elementCss "transition" "visibility 0.4s "
-                , Component.elementCss "visibility" "visible"
-                ]
-            else
-                [ Component.elementCss "transition" "visibility 0.4s "
-                , Component.elementCss "visibility" "hidden"
-                ]
-        position = case tooltip.position of
-            Tooltip.Left ->
-                Element.onLeft << Element.el
-                    ([ Element.paddingEach { padding | right = 8 }
-                    , Element.centerY
-                    ] ++ positionCss)
+            [ Element.alpha progress
+            , if progress == 0 then
+                Component.elementCss "visibility" "hidden"
 
-            Tooltip.Right ->
-                Element.onRight << Element.el
-                    ([Element.paddingEach { padding | left = 8 }
-                    , Element.centerY
-                    ] ++ positionCss)
+              else
+                Component.elementCss "visibility" "visible"
+            ]
 
-            Tooltip.Top ->
-                Element.above  << Element.el
-                    ([Element.paddingEach { padding | bottom = 8 }
-                    , Element.centerX
-                    ] ++ positionCss)
+        position =
+            case tooltip.position of
+                Tooltip.Left ->
+                    Element.onLeft
+                        << Element.el
+                            (positionCss
+                                ++ [ Element.paddingEach { padding | right = 8 }
+                                   , Element.centerY
+                                   ]
+                            )
 
-            Tooltip.Bottom ->
-                Element.below << Element.el
-                    ([Element.paddingEach { padding | top = 8 }
-                    , Element.centerX
-                    ] ++ positionCss)
+                Tooltip.Right ->
+                    Element.onRight
+                        << Element.el
+                            (positionCss
+                                ++ [ Element.paddingEach { padding | left = 8 }
+                                   , Element.centerY
+                                   ]
+                            )
+
+                Tooltip.Top ->
+                    Element.above
+                        << Element.el
+                            (positionCss
+                                ++ [ Element.paddingEach { padding | bottom = 8 }
+                                   , Element.centerX
+                                   ]
+                            )
+
+                Tooltip.Bottom ->
+                    Element.below
+                        << Element.el
+                            (positionCss
+                                ++ [ Element.paddingEach { padding | top = 8 }
+                                   , Element.centerX
+                                   ]
+                            )
     in
-    Element.el (layoutAtt ++ [ position tooltipView ])
-        <| Element.el
-             ( [ Element.htmlAttribute <| HtmlEvent.onMouseEnter (lift Tooltip.MouseEnter)
-             , Element.htmlAttribute <| HtmlEvent.onMouseLeave (lift Tooltip.MouseLeave)
-             ] ++ layoutAtt)
-             content
+    Element.el (layoutAtt ++ [ position tooltipView ]) <|
+        Element.el
+            (layoutAtt
+                ++ [ Events.onMouseEnter (lift Tooltip.MouseEnter)
+                   , Events.onMouseLeave (lift Tooltip.MouseLeave)
+                   ]
+            )
+            content
 
 
-
-padding = { top = 0, bottom = 0, left = 0, right = 0 }
+padding =
+    { top = 0, bottom = 0, left = 0, right = 0 }
 
 
 dontPropagate : (Tooltip.Msg -> msg) -> String -> Element.Attribute msg
@@ -104,14 +158,14 @@ dontPropagate lift eventName =
 
 type alias Store s msg =
     { s
-    | tooltip : Indexed Tooltip.Model
-    , lift : Message.Msg -> msg
+        | tooltip : Indexed Tooltip.Model
+        , lift : Message.Msg -> msg
     }
 
 
 getSet : Component.GetSetLift (Store s msg) Tooltip.Model
 getSet =
-    Component.getSet .tooltip (\model store -> { store | tooltip = model} ) Tooltip.defaultModel
+    Component.getSet .tooltip (\model store -> { store | tooltip = model }) Tooltip.defaultModel
 
 
 update : Tooltip.Msg -> Index -> Store s msg -> ( Store s msg, Cmd msg )
@@ -134,6 +188,66 @@ update_ msg model =
         Tooltip.BrowserAction ->
             ( { model | hovered = False }, Cmd.none )
 
+        Tooltip.OnAnimationFrame delta ->
+            case ( model.hovered, model.state ) of
+                ( True, Tooltip.Active Tooltip.Showing ) ->
+                    ( model, Cmd.none )
+
+                ( True, Tooltip.Active (Tooltip.AnimatingOut progress) ) ->
+                    ( { model | state = Tooltip.Active (Tooltip.AnimatingIn progress) }
+                    , Cmd.none
+                    )
+
+                ( True, Tooltip.Active (Tooltip.AnimatingIn progress) ) ->
+                    let
+                        newProgress =
+                            progress + delta / animInDuration
+                    in
+                    if newProgress >= 1 then
+                        ( { model | state = Tooltip.Active Tooltip.Showing }, Cmd.none )
+
+                    else
+                        ( { model | state = Tooltip.Active (Tooltip.AnimatingIn <| newProgress) }, Cmd.none )
+
+                ( True, Tooltip.Active (Tooltip.Delaying progress) ) ->
+                    let
+                        newProgress =
+                            progress + delta / showDelay
+                    in
+                    if newProgress >= 1 then
+                        ( { model | state = Tooltip.Active (Tooltip.AnimatingIn 0) }, Cmd.none )
+
+                    else
+                        ( { model | state = Tooltip.Active (Tooltip.Delaying <| newProgress) }, Cmd.none )
+
+                ( True, Tooltip.Nil ) ->
+                    ( { model | state = Tooltip.Active (Tooltip.Delaying 0) }, Cmd.none )
+
+                ( False, Tooltip.Active Tooltip.Showing ) ->
+                    ( { model | state = Tooltip.Active (Tooltip.AnimatingOut 1) }, Cmd.none )
+
+                ( False, Tooltip.Active (Tooltip.AnimatingOut progress) ) ->
+                    let
+                        newProgress =
+                            progress - delta / animOutDuration
+                    in
+                    if newProgress <= 0 then
+                        ( { model | state = Tooltip.Nil }, Cmd.none )
+
+                    else
+                        ( { model | state = Tooltip.Active (Tooltip.AnimatingOut <| newProgress) }, Cmd.none )
+
+                ( False, Tooltip.Active (Tooltip.AnimatingIn progress) ) ->
+                    ( { model | state = Tooltip.Active (Tooltip.AnimatingOut progress) }
+                    , Cmd.none
+                    )
+
+                ( False, Tooltip.Active (Tooltip.Delaying _) ) ->
+                    ( { model | state = Tooltip.Nil }, Cmd.none )
+
+                ( False, Tooltip.Nil ) ->
+                    ( model, Cmd.none )
+
 
 subscriptions : MaterialUI.Model a msg -> Sub msg
 subscriptions mui =
@@ -143,9 +257,11 @@ subscriptions mui =
 subscriptions_ : Tooltip.Model -> Sub Tooltip.Msg
 subscriptions_ _ =
     let
-        browserAction = Decode.succeed Tooltip.BrowserAction
+        browserAction =
+            Decode.succeed Tooltip.BrowserAction
     in
     Sub.batch
         [ Browser.Events.onMouseDown browserAction
         , Browser.Events.onKeyDown browserAction
+        , Browser.Events.onAnimationFrameDelta Tooltip.OnAnimationFrame
         ]
