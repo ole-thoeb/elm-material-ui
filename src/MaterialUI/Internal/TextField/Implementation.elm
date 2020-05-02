@@ -292,7 +292,7 @@ text attrs field theme =
 type alias Store s msg = { s | textfield : Indexed TextField.Model, lift : Message.Msg -> msg }
 
 
-getSet : Component.GetSetLift (Store s msg) TextField.Model
+getSet : Component.GetSet (Store s msg) TextField.Model
 getSet =
     Component.getSet .textfield (\model store -> { store | textfield = model }) TextField.defaultModel
 

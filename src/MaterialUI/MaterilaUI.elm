@@ -2,6 +2,7 @@ module MaterialUI.MaterilaUI exposing (Model, defaultModel, update, Msg, subscri
 
 
 import MaterialUI.Internal.Icon.Implementation as Icon
+import MaterialUI.Internal.Select.Implementation as Select
 import MaterialUI.Internal.Message as Message
 import MaterialUI.Internal.Model as Model
 import MaterialUI.Internal.Snackbar.Implementation as Snackbar
@@ -36,10 +37,14 @@ update msg model =
         Message.SnackbarMsg index subMsg ->
             Snackbar.update subMsg index model
 
+        Message.SelectMsg index subMsg ->
+            Select.update subMsg index model
+
 
 subscriptions : Model t msg -> Sub msg
 subscriptions model =
     Sub.batch
         [ Tooltip.subscriptions model
         , Snackbar.subscriptions model
+        , Select.subscriptions model
         ]

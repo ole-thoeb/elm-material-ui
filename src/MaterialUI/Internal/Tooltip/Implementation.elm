@@ -163,7 +163,7 @@ type alias Store s msg =
     }
 
 
-getSet : Component.GetSetLift (Store s msg) Tooltip.Model
+getSet : Component.GetSet (Store s msg) Tooltip.Model
 getSet =
     Component.getSet .tooltip (\model store -> { store | tooltip = model }) Tooltip.defaultModel
 

@@ -4,6 +4,7 @@ module MaterialUI.Internal.Model exposing (Model, defaultModel)
 import Dict
 import MaterialUI.Internal.Component exposing (Indexed)
 import MaterialUI.Internal.Icon.Model as Icon
+import MaterialUI.Internal.Select.Model as Select
 import MaterialUI.Internal.Message exposing (Msg)
 import MaterialUI.Internal.Snackbar.Model as Snackbar
 import MaterialUI.Internal.TextField.Model as Textfield
@@ -18,6 +19,7 @@ type alias Model t msg =
     , icon : Indexed Icon.Model
     , tooltip : Indexed Tooltip.Model
     , snackbar : Indexed (Snackbar.Model t msg)
+    , menu : Indexed Select.Model
     }
 
 
@@ -29,4 +31,5 @@ defaultModel lift theme =
     , icon = Dict.empty
     , tooltip = Dict.empty
     , snackbar = Dict.empty
+    , menu = Dict.empty
     }

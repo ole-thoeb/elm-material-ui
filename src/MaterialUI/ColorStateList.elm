@@ -1,15 +1,14 @@
 module MaterialUI.ColorStateList exposing
     ( ColorStateList
-    , StateColor(..)
     , State(..)
-    , get
+    , StateColor(..)
+    , all
     , color
+    , defaultBackgroundOnBackground
+    , get
     , toElementColor
     , transparent
-    , defaultBackgroundOnBackground
-    , all
     )
-
 
 import Element
 import MaterialUI.Theme as Theme exposing (Theme)
@@ -45,21 +44,27 @@ toElementColor theme (Color alpha c) =
 get : State -> ColorStateList a -> StateColor a
 get state colorStateList =
     case state of
-        Idle -> colorStateList.idle
+        Idle ->
+            colorStateList.idle
 
-        Hovered -> colorStateList.hovered
+        Hovered ->
+            colorStateList.hovered
 
-        Focused -> colorStateList.focused
+        Focused ->
+            colorStateList.focused
 
-        MouseDown -> colorStateList.mouseDown
+        MouseDown ->
+            colorStateList.mouseDown
 
-        Disabled -> colorStateList.disabled
+        Disabled ->
+            colorStateList.disabled
 
 
 color : ColorStateList a -> Theme a -> State -> Element.Color
-color colorStateList theme state=
+color colorStateList theme state =
     get state colorStateList
         |> toElementColor theme
+
 
 
 -- DEFAULTS
@@ -78,6 +83,7 @@ all singleColor =
     , mouseDown = singleColor
     , disabled = singleColor
     }
+
 
 defaultBackgroundOnBackground : ColorStateList a
 defaultBackgroundOnBackground =

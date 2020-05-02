@@ -115,7 +115,7 @@ type alias Store s a msg =
     }
 
 
-getSet : Component.GetSetLift (Store s a msg) (Snackbar.Model a msg)
+getSet : Component.GetSet (Store s a msg) (Snackbar.Model a msg)
 getSet =
     Component.getSet .snackbar (\model store -> { store | snackbar = model} ) Snackbar.defaultModel
 

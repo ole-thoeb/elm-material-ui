@@ -1,4 +1,4 @@
-module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSetLift, elementCss, delayedCmd, cmd, subscriptions)
+module MaterialUI.Internal.Component exposing (Index, Indexed, getSet, update, GetSet, elementCss, delayedCmd, cmd, subscriptions)
 
 
 import Dict exposing (Dict)
@@ -14,7 +14,7 @@ type alias Index = String
 type alias Indexed a = Dict String a
 
 
-type alias GetSetLift store model =
+type alias GetSet store model =
     { get : Index -> store -> model
     , set : Index -> model -> store -> store
     }
@@ -22,14 +22,14 @@ type alias GetSetLift store model =
 getSet : (store -> Indexed model)
     -> (Indexed model -> store -> store)
     -> model
-    -> GetSetLift store model
+    -> GetSet store model
 getSet getModel setModel default =
     { get = \index store -> Dict.get index (getModel store) |> Maybe.withDefault default
     , set = \index model store -> setModel (Dict.insert index model (getModel store)) store
     }
 
 
-update : GetSetLift store model
+update : GetSet store model
     -> (mIn -> mOut)
     -> (mIn -> model -> ( model, Cmd mIn ))
     -> mIn

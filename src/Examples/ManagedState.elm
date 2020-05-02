@@ -13,6 +13,7 @@ import MaterialUI.Icons.Content as Content
 import MaterialUI.Internal.Component exposing (Index)
 import MaterialUI.Internal.TextField.Model as TextField
 import MaterialUI.MaterilaUI as MaterialUI
+import MaterialUI.Select as Menu
 import MaterialUI.Snackbar as Snackbar
 import MaterialUI.Text as Text
 import MaterialUI.TextFieldM as TextField
@@ -26,6 +27,7 @@ type alias Model =
     , text1 : String
     , text2 : String
     , copyCount : Int
+    , menuItem : Maybe String
     }
 
 
@@ -38,6 +40,7 @@ type Msg
     | SnackbarSet
     | SnackbarEnqueue
     | SnackbarEnqueueFirst
+    | MenuClick String
 
 
 init : Decode.Value -> ( Model, Cmd Msg )
@@ -48,6 +51,7 @@ init _ =
             , text1 = ""
             , text2 = ""
             , copyCount = 0
+            , menuItem = Nothing
             }
         startSnackbar =
             { text = "Snackbar test"
@@ -103,7 +107,6 @@ update msg model =
         IconButton ->
             addSnackbar model Snackbar.enqueue "Copied !!"
 
-
         SnackbarAction ->
             ( { model | copyCount = model.copyCount + 10}, Cmd.none )
 
@@ -115,6 +118,9 @@ update msg model =
 
         SnackbarEnqueueFirst ->
             addSnackbar model Snackbar.enqueueFirst "EnqueueFirst"
+
+        MenuClick menuItem ->
+            ( { model | menuItem = Just menuItem }, Cmd.none )
 
 
 
@@ -222,6 +228,20 @@ view model =
                     }
                     theme
                 ]
+            , Menu.outlined model.mui
+                [ Element.width Element.fill
+                ]
+                { index = "menu"
+                , color = Menu.defaultColorPrimary
+                , toItem = \str -> { text = str }
+                , items =
+                    [ Menu.item "Alice has some really long text"
+                    , Menu.item "Bob"
+                    ]
+                , onClick = MenuClick
+                , selectedItem = model.menuItem
+                , label = "Menu"
+                }
             , Snackbar.view model.mui "snackbar"
             ]
     }

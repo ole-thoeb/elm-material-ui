@@ -107,7 +107,7 @@ type alias Store s msg =
     }
 
 
-getSet : Component.GetSetLift (Store s msg) Icon.Model
+getSet : Component.GetSet (Store s msg) Icon.Model
 getSet =
     Component.getSet .icon (\model store -> { store | icon = model} ) Icon.defaultModel
 
